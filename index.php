@@ -1,5 +1,6 @@
 <?php require_once "./include/video.php"; ?>
 <?php require_once "./include/color.php"; ?>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -65,79 +66,100 @@
             </form>
         </div>
         <div class="table-content">
-            <table>
-                <tr>
-                    <th>Title</th>
-                    <th>Image</th>
-                    <th>Thumbnail</th>
-                    <th>Duration</th>
-                    <th>Publish</th>
-                </tr>
-                <?php
-                if (isset($_GET['video-field']) && isset($_GET['sort-type'])) {
-                    usort($videos, function ($video1, $video2) {
-                        if ($_GET['sort-type'] === 'asc') {
-                            return $video1[strval($_GET['video-field'])] <=> $video2[strval($_GET['video-field'])];
-                        } elseif ($_GET['sort-type'] === 'desc') {
-                            return $video2[strval($_GET['video-field'])] <=> $video1[strval($_GET['video-field'])];
-                        } else {
+            <?php
+            if (isset($_GET['video-field']) && isset($_GET['sort-type'])) {
+                usort($videos, function ($video1, $video2) {
+                    if ($_GET['sort-type'] === 'asc') {
+                        return $video1[strval($_GET['video-field'])] <=> $video2[strval($_GET['video-field'])];
+                    } elseif ($_GET['sort-type'] === 'desc') {
+                        return $video2[strval($_GET['video-field'])] <=> $video1[strval($_GET['video-field'])];
+                    } else {
+                        return false;
+                    }
+                });
+            }
+            if (isset($_GET['search-title-action']) && isset($_GET['search-title'])) {
+                $videos = array_filter($videos, function ($video) {
+                    if ($_GET['search-title-action'] === 'contains') {
+                        return str_contains($video['name'], $_GET['search-title']);
+                    } elseif ($_GET['search-title-action'] === 'equal') {
+                        return $video['name'] === $_GET['search-title'];
+                    } else {
+                        return false;
+                    }
+                });
+            }
+            if (isset($_GET['search-duration-action']) && isset($_GET['search-duration']) && $_GET['search-duration']) {
+                $videos = array_filter($videos, function ($video) {
+                    if ($video['duration'] === null && !is_numeric($video['duration'])) {
+                        return false;
+                    }
+                    switch ($_GET['search-duration-action']) {
+                        case 'eq':
+                            return  intval($video['duration']) === intval($_GET['search-duration']);
+                        case 'not_eq':
+                            return  intval($video['duration']) !== intval($_GET['search-duration']);
+                        case 'ls':
+                            return  intval($video['duration']) < intval($_GET['search-duration']);
+                        case 'ls_eq':
+                            return  intval($video['duration']) <= intval($_GET['search-duration']);
+                        case 'gt':
+                            return  intval($video['duration']) > intval($_GET['search-duration']);
+                        case 'gt_eq':
+                            return  intval($video['duration']) >= intval($_GET['search-duration']);
+                        default:
                             return false;
-                        }
-                    });
-                }
-                if (isset($_GET['search-title-action']) && isset($_GET['search-title'])) {
-                    $videos = array_filter($videos, function ($video) {
-                        if ($_GET['search-title-action'] === 'contains') {
-                            return str_contains($video['name'], $_GET['search-title']);
-                        } elseif ($_GET['search-title-action'] === 'equal') {
-                            return $video['name'] === $_GET['search-title'];
-                        } else {
-                            return false;
-                        }
-                    });
-                }
-                if (isset($_GET['search-duration-action']) && isset($_GET['search-duration']) && $_GET['search-duration']) {
-                    $videos = array_filter($videos, function ($video) {
-                        if ($video['duration'] === null && !is_numeric($video['duration'])) {
-                            return false;
-                        }
-                        switch ($_GET['search-duration-action']) {
-                            case 'eq':
-                                return  intval($video['duration']) === intval($_GET['search-duration']);
-                            case 'not_eq':
-                                return  intval($video['duration']) !== intval($_GET['search-duration']);
-                            case 'ls':
-                                return  intval($video['duration']) < intval($_GET['search-duration']);
-                            case 'ls_eq':
-                                return  intval($video['duration']) <= intval($_GET['search-duration']);
-                            case 'gt':
-                                return  intval($video['duration']) > intval($_GET['search-duration']);
-                            case 'gt_eq':
-                                return  intval($video['duration']) >= intval($_GET['search-duration']);
-                            default:
-                                return false;
-                        }
-                    });
-                }
-                if(isset($_GET['show-less-than-60'])) {
-                    $videos = array_filter($videos, function ($video) {
-                        if ($video['duration'] === null && !is_numeric($video['duration'])) {
-                            return false;
-                        }
-                        return  intval($video['duration']) <  60;
-                    });
-                }
-                foreach ($videos as $video) {
-                ?>
-                    <tr class="<?php echo is_numeric($video["duration"]) ? getColorStyle(intval($video["duration"])) : ""; ?>">
-                        <td><?php echo $video["name"]; ?></td>
-                        <td><img class="video-img" src="<?php echo $video["image"]; ?>" alt="image"></td>
-                        <td><img class="video-img" src="<?php echo $video["thumbnail"]; ?>" alt="thumbnail"></td>
-                        <td><?php echo $video["duration"]; ?></td>
-                        <td><?php echo $video["publish"]; ?></td>
+                    }
+                });
+            }
+            if (isset($_GET['show-less-than-60'])) {
+                $videos = array_filter($videos, function ($video) {
+                    if ($video['duration'] === null && !is_numeric($video['duration'])) {
+                        return false;
+                    }
+                    return intval($video['duration']) < 60;
+                });
+            }
+            if (isset($_GET['video-id'])) {
+                $videos = array_filter($videos, function ($video) {
+                    if ($_GET['video-id'] === $video['id']) {
+                        return false;
+                    }
+                    return true;
+                });
+            }
+            if (count($videos) > 0) {
+            ?>
+                <table>
+                    <tr>
+                        <th>Title</th>
+                        <th>Image</th>
+                        <th>Thumbnail</th>
+                        <th>Duration</th>
+                        <th>Publish</th>
+                        <th>Exclude</th>
                     </tr>
-                <?php } ?>
-            </table>
+                    <?php
+                    foreach ($videos as $video) {
+                    ?>
+                        <tr class="<?php echo is_numeric($video["duration"]) ? getColorStyle(intval($video["duration"])) : ""; ?>">
+                            <td><?php echo $video["name"]; ?></td>
+                            <td><img class="video-img" src="<?php echo $video["image"]; ?>" alt="image"></td>
+                            <td><img class="video-img" src="<?php echo $video["thumbnail"]; ?>" alt="thumbnail"></td>
+                            <td><?php echo $video["duration"]; ?></td>
+                            <td><?php echo $video["publish"]; ?></td>
+                            <td>
+                                <form class="exclude-form" action="GET">
+                                    <input type="hidden" id="video-id" name="video-id" value="<?php echo $video["id"]; ?>">
+                                    <input class="input-field btn exclude-btn" type="submit" value="Exclude" />
+                                </form>
+                            </td>
+                        </tr>
+                    <?php } ?>
+                </table>
+            <?php } else { ?>
+                <h1>NO VIDEO FOUND</h1>
+            <?php } ?>
         </div>
     </div>
 </body>
