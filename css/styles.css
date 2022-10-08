@@ -15,8 +15,6 @@ body {
 .content {
   width: 100%;
   height: 100%;
-  display: flex;
-  justify-content: center;
 }
 
 table {
@@ -45,9 +43,53 @@ td {
 }
 
 .tr-blue {
-  background-color: rgb(76, 76, 219);
+  background-color: rgb(76, 76, 252);
 }
 
 .tr-green {
   background-color: rgb(132, 248, 126);
+}
+
+.forms {
+  height: 20%;
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  padding-left: 5%;
+}
+
+.input-field {
+  height: 30px;
+  width: 120px;
+  margin-left: 5px;
+}
+
+form {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  margin-top: 2px;
+}
+
+.table-content {
+  height: 80%;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.btn {
+  margin-top: 2.3%;
+}
+
+.input-field-checkbox {
+  margin-left: 5px;
+}
+
+.clear-form {
+  padding-top: 1.9%;
+}
+
+.checkbox {
+  margin-top: 2%;
 }

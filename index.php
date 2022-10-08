@@ -13,26 +13,132 @@
 
 <body>
     <div class="content">
-        <table>
-            <tr>
-                <th>Title</th>
-                <th>Image</th>
-                <th>Thumbnail</th>
-                <th>Duration</th>
-                <th>Publish</th>
-            </tr>
-            <?php
-            foreach ($videos as $video) {
-            ?>
-                <tr class="<?php echo is_numeric($video["duration"]) ? getColorStyle(intval($video["duration"])) : ""; ?>">
-                    <td><?php echo $video["name"]; ?></td>
-                    <td><img class="video-img" src="<?php echo $video["image"]; ?>" alt="image"></td>
-                    <td><img class="video-img" src="<?php echo $video["thumbnail"]; ?>" alt="thumbnail"></td>
-                    <td><?php echo $video["duration"]; ?></td>
-                    <td><?php echo $video["publish"]; ?></td>
+        <div class="forms">
+            <form method="get">
+                <div>
+                    <h3>Sort:</h3>
+                    <select class="input-field" name="video-field" id="video-field">
+                        <option value="">None</option>
+                        <option value="name">Title</option>
+                        <option value="duration">Duration</option>
+                        <option value="publish">Publish</option>
+                    </select>
+                    <select class="input-field" name="sort-type" id="sort-type">
+                        <option value="">None</option>
+                        <option value="asc">ASC</option>
+                        <option value="desc">DESC</option>
+                    </select>
+                </div>
+
+                <div>
+                    <h3>Search by title:</h3>
+                    <input autocomplete="off" class="input-field" placeholder="search title" type="text" name="search-title">
+                    <select class="input-field" name="search-title-action">
+                        <option value="contains">Contains</option>
+                        <option value="equal">Equal</option>
+                    </select>
+                </div>
+                <div>
+                    <h3>Search by duration:</h3>
+                    <input autocomplete="off" class="input-field" placeholder="search duration" type="number" min='0' name="search-duration">
+                    <select class="input-field" name="search-duration-action">
+                        <option value="eq">=</option>
+                        <option value="not_eq">!=</option>
+                        <option value="ls">
+                            &lt;
+                        </option>
+                        <option value="ls_eq">
+                            &lt;=
+                        </option>
+                        <option value="gt">></option>
+                        <option value="gt_eq">>=</option>
+                    </select>
+                </div>
+                <div class="checkbox">
+                    <input class="input-field-checkbox" type="checkbox" name="show-less-than-60" id="show-less-than-60" value="show">
+                    <label for="show-less-than-60">Less only than 60</label>
+                </div>
+                <input class="input-field btn" type="submit" value="Execute" />
+            </form>
+            <form class="clear-form" action="index.php">
+                <input class="input-field" type="submit" value="Clear" />
+            </form>
+        </div>
+        <div class="table-content">
+            <table>
+                <tr>
+                    <th>Title</th>
+                    <th>Image</th>
+                    <th>Thumbnail</th>
+                    <th>Duration</th>
+                    <th>Publish</th>
                 </tr>
-            <?php } ?>
-        </table>
+                <?php
+                if (isset($_GET['video-field']) && isset($_GET['sort-type'])) {
+                    usort($videos, function ($video1, $video2) {
+                        if ($_GET['sort-type'] === 'asc') {
+                            return $video1[strval($_GET['video-field'])] <=> $video2[strval($_GET['video-field'])];
+                        } elseif ($_GET['sort-type'] === 'desc') {
+                            return $video2[strval($_GET['video-field'])] <=> $video1[strval($_GET['video-field'])];
+                        } else {
+                            return false;
+                        }
+                    });
+                }
+                if (isset($_GET['search-title-action']) && isset($_GET['search-title'])) {
+                    $videos = array_filter($videos, function ($video) {
+                        if ($_GET['search-title-action'] === 'contains') {
+                            return str_contains($video['name'], $_GET['search-title']);
+                        } elseif ($_GET['search-title-action'] === 'equal') {
+                            return $video['name'] === $_GET['search-title'];
+                        } else {
+                            return false;
+                        }
+                    });
+                }
+                if (isset($_GET['search-duration-action']) && isset($_GET['search-duration']) && $_GET['search-duration']) {
+                    $videos = array_filter($videos, function ($video) {
+                        if ($video['duration'] === null && !is_numeric($video['duration'])) {
+                            return false;
+                        }
+                        switch ($_GET['search-duration-action']) {
+                            case 'eq':
+                                return  intval($video['duration']) === intval($_GET['search-duration']);
+                            case 'not_eq':
+                                return  intval($video['duration']) !== intval($_GET['search-duration']);
+                            case 'ls':
+                                return  intval($video['duration']) < intval($_GET['search-duration']);
+                            case 'ls_eq':
+                                return  intval($video['duration']) <= intval($_GET['search-duration']);
+                            case 'gt':
+                                return  intval($video['duration']) > intval($_GET['search-duration']);
+                            case 'gt_eq':
+                                return  intval($video['duration']) >= intval($_GET['search-duration']);
+                            default:
+                                return false;
+                        }
+                    });
+                }
+                if(isset($_GET['show-less-than-60'])) {
+                    $videos = array_filter($videos, function ($video) {
+                        if ($video['duration'] === null && !is_numeric($video['duration'])) {
+                            return false;
+                        }
+                        return  intval($video['duration']) <  60;
+                    });
+                }
+                foreach ($videos as $video) {
+                ?>
+                    <tr class="<?php echo is_numeric($video["duration"]) ? getColorStyle(intval($video["duration"])) : ""; ?>">
+                        <td><?php echo $video["name"]; ?></td>
+                        <td><img class="video-img" src="<?php echo $video["image"]; ?>" alt="image"></td>
+                        <td><img class="video-img" src="<?php echo $video["thumbnail"]; ?>" alt="thumbnail"></td>
+                        <td><?php echo $video["duration"]; ?></td>
+                        <td><?php echo $video["publish"]; ?></td>
+                    </tr>
+                <?php } ?>
+            </table>
+        </div>
     </div>
 </body>
 
